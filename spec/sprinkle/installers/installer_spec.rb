@@ -11,7 +11,7 @@ describe Sprinkle::Installers::Installer do
     @installer = create_installer
     @installer.delivery = @delivery
     @roles = []
-    @deployment = deployment do
+    Sprinkle::Script.current.deployment = deployment do
       delivery :capistrano
       installer do; prefix '/usr/bin'; end
     end
@@ -46,7 +46,7 @@ describe Sprinkle::Installers::Installer do
 
       it 'should override any deployment level defaults' do
         @installer = create_installer do; prefix '/usr/local'; end
-        @installer.defaults(@deployment)
+        @installer.defaults(Sprinkle::Script.current.deployment)
         @installer.prefix.first.should == '/usr/local'
       end
     end

@@ -34,7 +34,7 @@ module Sprinkle
     # The method outlined above which specifies deployment specific information
     # for a sprinkle script. For more information, read the header of this module.
     def deployment(&block)
-      @deployment = Deployment.new(&block)
+      Sprinkle::Script.current.deployment = Deployment.new(&block)
     end
 
     class Deployment
@@ -66,7 +66,7 @@ module Sprinkle
       end
 
       def process #:nodoc:
-        POLICIES.each do |policy|
+        Sprinkle::Script.current.policies.each do |policy|
           policy.process(self)
         end
       rescue Sprinkle::Errors::RemoteCommandFailure => e

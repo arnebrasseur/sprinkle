@@ -39,14 +39,13 @@ module Sprinkle
   # multiple packages within the same role without having to wait for
   # that package to install repeatedly.
   module Policy
-    POLICIES = [] #:nodoc:
 
     # Defines a single policy. Currently the only option, which is also
     # required, is :roles, which defines which servers a policy is
     # used on.
     def policy(name, options = {}, &block)
       p = Policy.new(name, options, &block)
-      POLICIES << p
+      Sprinkle::Script.current.policies << p
       p
     end
 
@@ -80,7 +79,7 @@ module Sprinkle
         @packages.each do |p, args|
           cloud_info "\nPolicy #{@name} requires package #{p}"
 
-          package = Sprinkle::Package::PACKAGES[p]
+          package = Sprinkle::Script.current.packages[p]
           raise "Package definition not found for key: #{p}" unless package
           package = select_package(p, package) if package.is_a? Array # handle virtual package selection
           # get an instance of the package and pass our config options
@@ -112,7 +111,7 @@ module Sprinkle
               menu.prompt = "Multiple choices exist for virtual package #{name}"
               menu.choices *packages.collect(&:to_s)
             end
-            package = Sprinkle::Package::PACKAGES[package]
+            package = Sprinkle::Script.current.packages[package]
           end
 
           cloud_info "Selecting #{package.to_s} for virtual package #{name}"

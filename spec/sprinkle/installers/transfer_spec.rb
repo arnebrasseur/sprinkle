@@ -12,7 +12,7 @@ describe Sprinkle::Installers::Transfer do
 		@destination = 'destination'
     @installer = create_transfer(@source, @destination)
     @roles = []
-    @deployment = deployment do
+    Sprinkle::Script.current.deployment = deployment do
       delivery :capistrano
       installer do; prefix '/usr/bin'; end
     end

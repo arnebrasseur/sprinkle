@@ -11,9 +11,9 @@ describe Sprinkle::Configurable do
     @configurable = MyPrefix::Configurable.new
     @default = Proc.new { }
     @defaults = { :configurable => @default }
-    @deployment = Object.new
-    @deployment.stub!(:defaults).and_return(@defaults)
-    @deployment.stub!(:style)
+    Sprinkle::Script.current.deployment = Object.new
+    Sprinkle::Script.current.deployment.stub!(:defaults).and_return(@defaults)
+    Sprinkle::Script.current.deployment.stub!(:style)
   end
 
   it 'should be configurable via external defaults' do
@@ -21,7 +21,7 @@ describe Sprinkle::Configurable do
   end
 
   it 'should select the defaults for the particular concrete installer class' do
-    @deployment.should_receive(:defaults).and_return(@defaults)
+    Sprinkle::Script.current.deployment.should_receive(:defaults).and_return(@defaults)
     @defaults.should_receive(:[]).with(:configurable).and_return(@default)
   end
 
@@ -42,6 +42,6 @@ describe Sprinkle::Configurable do
   end
 
   after do
-    @configurable.defaults(@deployment)
+    @configurable.defaults(Sprinkle::Script.current.deployment)
   end
 end

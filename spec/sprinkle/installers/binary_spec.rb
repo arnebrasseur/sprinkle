@@ -19,7 +19,7 @@ describe Sprinkle::Installers::Binary do
       archives '/archives/directory'
     end
 
-    installer.defaults(@deployment)
+    installer.defaults(Sprinkle::Script.current.deployment)
     
     [binary, deployment, installer]
   end
@@ -31,7 +31,7 @@ describe Sprinkle::Installers::Binary do
 
   describe "binary#prepare_commands" do
     before do
-      @binary, @deployment, @installer = create_context
+      @binary, Sprinkle::Script.current.deployment, @installer = create_context
     end
     
     it "should return mkdir command to create the prefix directory" do
@@ -45,7 +45,7 @@ describe Sprinkle::Installers::Binary do
   
   describe "binary#install_commands" do
     before do
-      @binary, @deployment, @installer = create_context
+      @binary, Sprinkle::Script.current.deployment, @installer = create_context
     end
     
     it "should return a commands to place the binary in the correct archive directory" do

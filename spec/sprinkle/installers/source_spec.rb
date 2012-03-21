@@ -8,7 +8,7 @@ describe Sprinkle::Installers::Source do
     @tarball = "#{@filename}.tar.gz"
     @source = "ftp://ftp.ruby-lang.org/pub/ruby/1.8/#{@tarball}"
 
-    @deployment = deployment do
+    Sprinkle::Script.current.deployment = deployment do
       delivery :capistrano
       source do
         prefix   '/usr'
@@ -31,7 +31,7 @@ describe Sprinkle::Installers::Source do
       option %w( foo bar baz )
     end
 
-    @installer.defaults(@deployment)
+    @installer.defaults(Sprinkle::Script.current.deployment)
   end
 
   def create_source(source, version = nil, &block)
@@ -214,7 +214,7 @@ describe Sprinkle::Installers::Source do
           custom_install 'ruby setup.rb'
         end
 
-        @installer.defaults(@deployment)
+        @installer.defaults(Sprinkle::Script.current.deployment)
       end
 
       it 'should store the custom install commands' do
@@ -279,7 +279,7 @@ describe Sprinkle::Installers::Source do
 
       @installer = create_source @source
       @commands.each { |k, v| @installer.pre k, *v }
-      @installer.defaults(@deployment)
+      @installer.defaults(Sprinkle::Script.current.deployment)
     end
 
     it 'should run all pre-prepare commands' do
@@ -310,7 +310,7 @@ describe Sprinkle::Installers::Source do
 
       @installer = create_source @source
       @commands.each { |k, v| @installer.post k, *v }
-      @installer.defaults(@deployment)
+      @installer.defaults(Sprinkle::Script.current.deployment)
     end
 
     it 'should run all post-prepare commands' do

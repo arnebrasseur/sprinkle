@@ -33,10 +33,10 @@ describe Sprinkle::Policy do
     end
 
     it 'should add itself to the global policy list' do
-      sz = Sprinkle::Policy::POLICIES.size
+      sz = Sprinkle::Script.current.policies.size
       p = policy @name, :roles => :app do; end
-      Sprinkle::Policy::POLICIES.size.should == sz + 1
-      Sprinkle::Policy::POLICIES.last.should == p
+      Sprinkle::Script.current.policies.size.should == sz + 1
+      Sprinkle::Script.current.policies.last.should == p
     end
 
   end
@@ -45,8 +45,8 @@ describe Sprinkle::Policy do
     include Sprinkle::Package
 
     before do
-      @deployment = mock(Sprinkle::Deployment)
-      Sprinkle::Package::PACKAGES.clear # reset full package list before each spec is run
+      Sprinkle::Script.current.deployment = mock(Sprinkle::Deployment)
+      Sprinkle::Script.current.packages.clear # reset full package list before each spec is run
 
       @a = package :a do; requires :b; requires :c; end
       @b = package :b, :provides => :xyz do; end
@@ -103,20 +103,20 @@ describe Sprinkle::Policy do
 
       it 'should automatically select a concrete package implementation for a virtual one when there exists only one possible selection' do
         @policy = policy :virtual, :roles => :app do; requires :xyz; end
-        Sprinkle::Package::PACKAGES[:xyz].should == [ @b ]
+        Sprinkle::Script.current.packages[:xyz].should == [ @b ]
       end
 
       it 'should ask the user for the concrete package implementation to use for a virtual one when more than one possible choice exists' do
         @policy = policy :virtual, :roles => :app do; requires :abc; end
-        Sprinkle::Package::PACKAGES[:abc].should include(@c)
-        Sprinkle::Package::PACKAGES[:abc].should include(@d)
+        Sprinkle::Script.current.packages[:abc].should include(@c)
+        Sprinkle::Script.current.packages[:abc].should include(@d)
         $terminal.should_receive(:choose).and_return(:c)
       end
 
     end
 
     after do
-      @policy.process(@deployment)
+      @policy.process(Sprinkle::Script.current.deployment)
     end
   end
 end
@@ -124,15 +124,15 @@ end
 describe Sprinkle::Policy, 'with missing packages' do
 
   before do
-    @deployment = mock(Sprinkle::Deployment)
-    Sprinkle::Package::PACKAGES.clear # reset full package list before each spec is run
+    Sprinkle::Script.current.deployment = mock(Sprinkle::Deployment)
+    Sprinkle::Script.current.packages.clear # reset full package list before each spec is run
 
     @policy = policy :test, :roles => :app do; requires :z; end
     $terminal.stub!(:choose).and_return(:c) # stub out highline asking questions
   end
 
   it 'should raise an error if a package is missing' do
-    lambda { @policy.process(@deployment) }.should raise_error
+    lambda { @policy.process(Sprinkle::Script.current.deployment) }.should raise_error
   end
 
 end

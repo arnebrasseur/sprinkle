@@ -106,12 +106,12 @@ CODE
 
     it 'should added new packages to the global package hash' do
       pkg = package @name do; end
-      Sprinkle::Package::PACKAGES[@name].should == pkg
+      Sprinkle::Script.current.packages[@name].should == pkg
     end
 
     it 'should add the new package to the provides list if specified' do
       pkg = package @name, :provides => :database do; end
-      Sprinkle::Package::PACKAGES[:database].last.should == pkg
+      Sprinkle::Script.current.packages[:database].last.should == pkg
     end
 
   end
@@ -251,7 +251,7 @@ CODE
   describe 'when processing' do
 
     before do
-      @deployment = mock(Sprinkle::Deployment)
+      Sprinkle::Script.current.deployment = mock(Sprinkle::Deployment)
       @roles = [ :app, :db ]
       @installer = mock(Sprinkle::Installers::Installer, :defaults => true, :process => true)
       @package = package @name do; end
@@ -264,7 +264,7 @@ CODE
       end
 
       it 'should configure itself against the deployment context' do
-        @installer.should_receive(:defaults).with(@deployment).and_return
+        @installer.should_receive(:defaults).with(Sprinkle::Script.current.deployment).and_return
       end
 
       it 'should request the installer to process itself' do
@@ -272,7 +272,7 @@ CODE
       end
 
       after do
-        @package.process(@deployment, @roles)
+        @package.process(Sprinkle::Script.current.deployment, @roles)
       end
     end
 
@@ -280,7 +280,7 @@ CODE
 
       it 'should not request the installer to process if the package is a metapackage' do
         @installer.should_not_receive(:process)
-        @package.process(@deployment, @roles)
+        @package.process(Sprinkle::Script.current.deployment, @roles)
       end
 
     end
@@ -301,7 +301,7 @@ CODE
 
         it 'should process verifications only once' do
           @pkg.should_receive(:process_verifications).once
-          @pkg.process(@deployment, @roles)
+          @pkg.process(Sprinkle::Script.current.deployment, @roles)
         end
 
         after do
@@ -317,8 +317,8 @@ CODE
         end
 
         it 'should process verifications twice' do
-          @pkg.should_receive(:process_verifications).once.with(@deployment, @roles, true).and_raise(Sprinkle::VerificationFailed.new(@pkg, ''))
-          @pkg.should_receive(:process_verifications).once.with(@deployment, @roles).and_raise(Sprinkle::VerificationFailed.new(@pkg, ''))
+          @pkg.should_receive(:process_verifications).once.with(Sprinkle::Script.current.deployment, @roles, true).and_raise(Sprinkle::VerificationFailed.new(@pkg, ''))
+          @pkg.should_receive(:process_verifications).once.with(Sprinkle::Script.current.deployment, @roles).and_raise(Sprinkle::VerificationFailed.new(@pkg, ''))
         end
 
         it 'should continue with installation if pre-verification fails' do
@@ -335,7 +335,7 @@ CODE
 
         after do
           begin
-            @pkg.process(@deployment, @roles)
+            @pkg.process(Sprinkle::Script.current.deployment, @roles)
           rescue Sprinkle::VerificationFailed => e; end
         end
       end
@@ -345,7 +345,7 @@ CODE
 
   describe 'when processing verifications' do
     before do
-      @deployment = mock(Sprinkle::Deployment)
+      Sprinkle::Script.current.deployment = mock(Sprinkle::Deployment)
       @roles = [ :app, :db ]
       @installer = mock(Sprinkle::Installers::Installer, :defaults => true, :process => true)
       @pkg = create_package_with_blank_verify(3)
@@ -358,7 +358,7 @@ CODE
 
     it 'should request _each_ verification to configure itself against the deployment context' do
       @pkg.verifications.each do |v|
-        v.should_receive(:defaults).with(@deployment).once
+        v.should_receive(:defaults).with(Sprinkle::Script.current.deployment).once
         v.stub!(:process)
       end
     end
@@ -380,7 +380,7 @@ CODE
     end
 
     after do
-      @pkg.process_verifications(@deployment, @roles)
+      @pkg.process_verifications(Sprinkle::Script.current.deployment, @roles)
     end
   end
 
