@@ -290,6 +290,10 @@ module Sprinkle
 
       def to_s; @name; end
       
+      def var(name)
+        Sprinkle::Script.current.var name
+      end
+
       protected
       
       def install(i)

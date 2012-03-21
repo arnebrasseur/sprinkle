@@ -27,5 +27,9 @@ module Sprinkle
     def option?(sym)
       !@options[sym].nil?
     end
+
+    def var(name)
+      @package.var(name)
+    end
   end
 end

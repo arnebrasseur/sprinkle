@@ -39,10 +39,12 @@ module Sprinkle
     attr_reader :packages
     attr_reader :policies
     attr_accessor :deployment
+    attr_accessor :vars
 
     def initialize
       @packages = {}
       @policies = []
+      @vars = {}
       @deployment = nil
     end
 
@@ -65,6 +67,14 @@ module Sprinkle
       Sprinkle::Script.current = self
       @deployment.process if @deployment
       Sprinkle::Script.current = nil
+    end
+
+    def set_var(name, val = nil)
+      @vars[name] = val
+    end
+
+    def var(name)
+      @vars[name] or raise "#{name} not found"
     end
   end
 end
