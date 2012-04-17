@@ -27,6 +27,8 @@ module Sprinkle
     # block and calling the option as a method with the value as 
     # its parameter.
     class Apt < PackageInstaller
+      attr_flag :dependencies_only
+
       def initialize(parent, *packages, &block) #:nodoc:
         super parent, *packages, &block
         @options.reverse_merge!(:dependencies_only => false)

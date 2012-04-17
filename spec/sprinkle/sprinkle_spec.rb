@@ -8,8 +8,14 @@ describe Sprinkle do
     end
   end
 
-  it 'should default to production mode' do
-    Sprinkle::OPTIONS[:testing].should be_false
+  describe 'A sprinkle script' do
+    before do
+      @script = Sprinkle::Script.new
+    end
+
+    it 'should default to production mode' do
+      @script.options[:testing].should be_false
+    end
   end
 
   it 'should automatically create a logger object on Kernel' do

@@ -14,6 +14,7 @@ require 'optparse'
 # NOTE: the option -p/--path= is given as an example, and should probably be replaced in your application.
 
 OPTIONS = {}
+SPRINKLE_OPTIONS = {}
 MANDATORY_OPTIONS = %w( path )
 
 ARGV.each do |arg|
@@ -62,19 +63,19 @@ BANNER
 end
 
 def force_mode(options)
-  Sprinkle::OPTIONS[:force] = OPTIONS[:force] || false
+  SPRINKLE_OPTIONS[:force] = options[:force] || false
 end
 
 def operation_mode(options)
-  Sprinkle::OPTIONS[:testing] = OPTIONS[:testing] || false
+  SPRINKLE_OPTIONS[:testing] = options[:testing] || false
 end
 
 def powder_cloud(options)
-  Sprinkle::OPTIONS[:cloud] = OPTIONS[:cloud] || false
+  SPRINKLE_OPTIONS[:cloud] = options[:cloud] || false
 end
 
 def verbosity(options)
-  Sprinkle::OPTIONS[:verbose] = OPTIONS[:verbose] || false
+  SPRINKLE_OPTIONS[:verbose] = options[:verbose] || false
 end
 
 def log_level(options)
@@ -92,4 +93,4 @@ powder_cloud(OPTIONS)
 log_level(OPTIONS)
 verbosity(OPTIONS)
 
-Sprinkle::Script.sprinkle File.read(powder), powder
+Sprinkle::Script.sprinkle File.read(powder), powder, SPRINKLE_OPTIONS

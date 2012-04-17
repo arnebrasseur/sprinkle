@@ -22,11 +22,6 @@ Dir[File.dirname(__FILE__) + '/sprinkle/verifiers/*.rb'].each { |e| require e }
 Dir[File.dirname(__FILE__) + '/sprinkle/installers/*.rb'].each { |e| require e }
 
 
-# Configuration options
-module Sprinkle
-  OPTIONS = { :testing => false, :verbose => false, :force => false }
-end
-
 # Object is extended to give the package, policy, and deployment methods. To
 # read about each method, see the corresponding module which is included.
 #--

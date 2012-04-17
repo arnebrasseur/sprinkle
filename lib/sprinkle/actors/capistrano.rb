@@ -17,12 +17,14 @@ module Sprinkle
     # Recipes is given a list of files which capistrano will include and load.
     # These recipes are mainly to set variables such as :user, :password, and to 
     # set the app domain which will be sprinkled. 
-    class Capistrano
+    class Capistrano < Actor
       attr_accessor :config, :loaded_recipes #:nodoc:
 
-      def initialize(&block) #:nodoc:
+      def initialize(deployment, &block) #:nodoc:
+        super deployment
+
         @config = ::Capistrano::Configuration.new
-        @config.logger.level = Sprinkle::OPTIONS[:verbose] ? ::Capistrano::Logger::INFO : ::Capistrano::Logger::IMPORTANT
+        @config.logger.level = verbose? ? ::Capistrano::Logger::INFO : ::Capistrano::Logger::IMPORTANT
         @config.set(:password) { ::Capistrano::CLI.password_prompt }
         
         @config.set(:_sprinkle_actor, self)
@@ -80,7 +82,6 @@ module Sprinkle
         inst=@installer
         @log_recorder = log_recorder = Sprinkle::Utility::LogRecorder.new
         define_task(name, roles) do
-          via = fetch(:run_method, :sudo)
           commands.each do |command|
             if command == :TRANSFER
               opts.reverse_merge!(:recursive => true)
@@ -91,7 +92,7 @@ module Sprinkle
             else
               # this reset the log
               log_recorder.reset command
-              invoke_command(command, {:via => via}) do |c,s,d| 
+              invoke_command(command) do |c,s,d| 
                 # record the stream and data
                 log_recorder.log(s, d)
               end

@@ -7,10 +7,11 @@ describe Sprinkle::Actors::Capistrano do
     @cap = ::Capistrano::Configuration.new
     ::Capistrano::Configuration.stub!(:new).and_return(@cap)
     @cap.stub!(:load).and_return
+    @script = Sprinkle::Script.new
   end
 
   def create_cap(&block)
-    Sprinkle::Actors::Capistrano.new &block
+    Sprinkle::Actors::Capistrano.new @script, &block
   end
 
   describe 'when created' do
@@ -23,11 +24,11 @@ describe Sprinkle::Actors::Capistrano do
     describe 'when verbose' do
 
       before do
-        Sprinkle::OPTIONS[:verbose] = true
+        @script.verbose = true
+        @cap = create_cap
       end
 
       it 'should set verbose logging on the capistrano object' do
-        @cap = create_cap
         @cap.config.logger.level.should == ::Capistrano::Logger::INFO
       end
 
@@ -36,11 +37,11 @@ describe Sprinkle::Actors::Capistrano do
     describe 'when not verbose' do
 
       before do
-        Sprinkle::OPTIONS[:verbose] = false
+        @script.verbose = false
+        @cap = create_cap
       end
 
       it 'should set quiet logging on the capistrano object' do
-        @cap = create_cap
         @cap.config.logger.level.should == ::Capistrano::Logger::IMPORTANT
       end
 
@@ -146,7 +147,7 @@ describe Sprinkle::Actors::Capistrano do
       @cap = create_cap do; recipes 'deploy'; end
       @cap.stub!(:run).and_return
       
-      @installer = Sprinkle::Installers::Transfer.new Package.new(@name){}, @source, @dest
+      @installer = Sprinkle::Installers::Transfer.new package(@name){}, @source, @dest
 
       @testing_errors = false
     end
@@ -191,17 +192,12 @@ describe Sprinkle::Actors::Capistrano do
       @name     = 'name'
 
       @cap = create_cap do; recipes 'deploy'; end
-      @cap.config.stub!(:fetch).and_return(:sudo)
       @cap.config.stub!(:invoke_command).and_return
     end
 
-    it 'should use sudo to invoke commands when so configured' do
-      @cap.config.should_receive(:fetch).with(:run_method, :sudo).and_return(:sudo)
-    end
-
     it 'should run the supplied commands' do
-      @cap.config.should_receive(:invoke_command).with('op1', :via => :sudo).ordered.and_return
-      @cap.config.should_receive(:invoke_command).with('op2', :via => :sudo).ordered.and_return
+      @cap.config.should_receive(:invoke_command).with('op1').ordered.and_return
+      @cap.config.should_receive(:invoke_command).with('op2').ordered.and_return
     end
 
     it 'should be applicable for the supplied roles' do
@@ -222,18 +218,19 @@ describe Sprinkle::Actors::Capistrano do
       @roles    = %w( app )
       @name     = 'name'
 
-      @cap = create_cap do; recipes 'deploy'; end
-      @cap.config.stub!(:upload).and_return
+      @cap = create_cap do; role :app, 'yourhost.com' ; end
+      @cap.config.stub!(:upload)
+      @cap.config.stub!(:run)
 
-      @installer = Sprinkle::Installers::Transfer.new Package.new(@name){}, @source, @dest
+      @installer = Sprinkle::Installers::Transfer.new package(@name){}, @source, @dest
     end
 
     it 'should call upload with the source and destination via :scp' do
-      @cap.config.should_receive(:upload).with(@source, @dest, :via => :scp, :recursive => true).and_return
+      @cap.config.should_receive(:upload).with(@source, '/tmp/sprinkle_' + @dest, :via => :scp, :recursive => true).and_return
     end
 
     it 'should be applicable for the supplied roles' do
-      @cap.stub!(:run).and_return
+      @cap.stub!(:run)
       @cap.config.should_receive(:task).with(:install_name, :roles => @roles).and_return
     end
 
@@ -249,21 +246,22 @@ describe Sprinkle::Actors::Capistrano do
       @dest     = 'dest'
       @roles    = %w( app )
       @name     = 'name'
-      @package  = Package.new(@name){}
+      @package  = @script.package(@name){}
 
-      @cap = create_cap do; recipes 'deploy'; end
-      @cap.config.stub!(:upload).and_return
+      @cap = create_cap do; role :app, 'yourhost.com' ; end
+      @cap.config.stub!(:upload)
+      @cap.config.stub!(:run)
 
       @installer = Sprinkle::Installers::Transfer.new @package, @source, @dest, :recursive => false
       @installer.options[:recursive] = false
     end
 
     it 'should call upload with the source and destination via :scp' do
-      @cap.config.should_receive(:upload).with(@source, @dest, :via => :scp, :recursive => false).and_return
+      @cap.config.should_receive(:upload).with(@source, '/tmp/sprinkle_' + @dest, :via => :scp, :recursive => false).and_return
     end
 
     it 'should be applicable for the supplied roles' do
-      @cap.stub!(:run).and_return
+      @cap.stub!(:run)
       @cap.config.should_receive(:task).with(:install_name, :roles => @roles).and_return
     end
 

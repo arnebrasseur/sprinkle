@@ -68,7 +68,9 @@ module Sprinkle
 
     class Source < Installer
       attr_accessor :source #:nodoc:
-      
+      attr_multioption :prefix, :builds, :archives, :custom_install
+      attr_multioption :enable, :disable, :with, :without, :option
+
       api do
         def source(source, options = {}, &block)
           @recommends << :build_essential # Ubuntu/Debian
@@ -124,17 +126,17 @@ module Sprinkle
 
           extras.inject(command) { |m, (k, v)|  m << create_options(k, v) if options[k]; m }
 
-          [ command << " > #{@package.name}-configure.log 2>&1'" ]
+          [ command << " > #{package.name}-configure.log 2>&1'" ]
         end
 
         def build_commands #:nodoc:
           return [] if custom_install?
-          [ "bash -c 'cd #{build_dir} && make > #{@package.name}-build.log 2>&1'" ]
+          [ "bash -c 'cd #{build_dir} && make > #{package.name}-build.log 2>&1'" ]
         end
 
         def install_commands #:nodoc:
           return custom_install_commands if custom_install?
-          [ "bash -c 'cd #{build_dir} && make install > #{@package.name}-install.log 2>&1'" ]
+          [ "bash -c 'cd #{build_dir} && make install > #{package.name}-install.log 2>&1'" ]
         end
 
         def custom_install? #:nodoc:
@@ -151,7 +153,7 @@ module Sprinkle
         # dress is overriden from the base Sprinkle::Installers::Installer class so that the command changes
         # directory to the build directory first. Also, the result of the command is logged.
         def dress(commands, stage)
-          commands.collect { |command| "bash -c 'cd #{build_dir} && #{command} >> #{@package.name}-#{stage}.log 2>&1'" }
+          commands.collect { |command| "bash -c 'cd #{build_dir} && #{command} >> #{package.name}-#{stage}.log 2>&1'" }
         end
 
       private

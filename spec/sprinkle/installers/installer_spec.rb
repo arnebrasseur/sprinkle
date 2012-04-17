@@ -2,6 +2,8 @@ require File.expand_path("../../spec_helper", File.dirname(__FILE__))
 
 describe Sprinkle::Installers::Installer do
   class MockInstaller < Sprinkle::Installers::Installer
+    attr_multioption :prefix
+
     def install_commands
       "noop"
     end
@@ -10,7 +12,7 @@ describe Sprinkle::Installers::Installer do
   include Sprinkle::Deployment
 
   before do
-    @package = mock(Sprinkle::Package, :name => 'package')
+    @package = Sprinkle::Package::Package.new(nil, 'package') {}
     @empty = Proc.new { }
     @sequence = ['op1', 'op2']
     @delivery = mock(Sprinkle::Deployment, :process => true, :install => true)
@@ -73,7 +75,7 @@ describe Sprinkle::Installers::Installer do
     describe 'when testing' do
 
       before do
-        Sprinkle::OPTIONS[:testing] = true
+        @installer.testing true
         @logger = mock(ActiveSupport::BufferedLogger, :debug => true, :debug? => true)
       end
 
@@ -89,7 +91,8 @@ describe Sprinkle::Installers::Installer do
     
     describe "with sudo from package level" do
       before do
-        @installer.package = mock(Sprinkle::Package, :name => 'package', :sudo? => true)
+        @installer.package = Sprinkle::Package::Package.new(nil, 'package'){}
+        @installer.package.use_sudo
       end
       
       it "should know it uses sudo" do
@@ -181,7 +184,7 @@ describe Sprinkle::Installers::Installer do
 
     after do
       @installer.process(@roles)
-      Sprinkle::OPTIONS[:testing] = false
+      @installer.testing false
     end
 
   end

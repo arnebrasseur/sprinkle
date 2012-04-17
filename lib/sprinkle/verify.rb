@@ -9,7 +9,7 @@ module Sprinkle
   # blocks are also run before an install to see if a package is <em>already</em>
   # installed. If this is the case, the package is skipped and Sprinkle continues
   # with the next package. This behavior can be overriden by setting the -f flag on
-  # the sprinkle script or setting Sprinkle::OPTIONS[:force] to true if you're
+  # the sprinkle script or setting Sprinkle::Script#options[:force] to true if you're
   # using sprinkle programmatically. 
   #
   # == An Example
@@ -60,7 +60,13 @@ module Sprinkle
   #   end
   class Verify
     include Sprinkle::Configurable
-    attr_accessor :package, :description, :commands #:nodoc:
+    include Sprinkle::Deployable
+
+    attr_accessor :description, :commands #:nodoc:
+    attr_option :padding
+    attr_flag :testing, :verbose, :force, :use_sudo
+
+    alias :package :parent
     
     class <<self
       # Register a verification module
@@ -68,11 +74,11 @@ module Sprinkle
         class_eval { include new_module }
       end
     end
-    
+
     def initialize(package, description = '', &block) #:nodoc:
       raise 'Verify requires a block.' unless block
       
-      @package = package
+      @parent = package
       @description = description
       @commands = []
       @options ||= {}
@@ -84,18 +90,18 @@ module Sprinkle
     def process(roles, pre = false) #:nodoc:
       assert_delivery
       
-      description = @description.empty? ? " (#{@package.name})" : @description
+      description = @description.empty? ? " (#{package.name})" : @description
       
       if logger.debug?
-        logger.debug "#{@package.name}#{description} verification sequence: #{@commands.join('; ')} for roles: #{roles}\n"
+        logger.debug "#{package.name}#{description} verification sequence: #{@commands.join('; ')} for roles: #{roles}\n"
       end
       
-      unless Sprinkle::OPTIONS[:testing]
-        logger.info "#{" " * @options[:padding]}--> Verifying #{description}..."
+      unless testing?
+        logger.info "#{" " * padding}--> Verifying #{description}..."
         
         unless @delivery.verify(self, roles)
           # Verification failed, halt sprinkling gracefully.
-          raise Sprinkle::VerificationFailed.new(@package, description)
+          raise Sprinkle::VerificationFailed.new(package, description)
         end
       end
     end

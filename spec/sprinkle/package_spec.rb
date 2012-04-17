@@ -106,12 +106,12 @@ CODE
 
     it 'should added new packages to the global package hash' do
       pkg = package @name do; end
-      Sprinkle::Package::PACKAGES[@name].should == pkg
+      Sprinkle::Script.instance.packages[@name].should == pkg
     end
 
     it 'should add the new package to the provides list if specified' do
       pkg = package @name, :provides => :database do; end
-      Sprinkle::Package::PACKAGES[:database].last.should == pkg
+      Sprinkle::Script.instance.packages[:database].last.should == pkg
     end
 
   end
@@ -144,6 +144,7 @@ CODE
 
     it 'should optionally accept a noop installer' do
       pkg = package @name do
+        use_sudo false
         noop do
         end
       end
@@ -296,7 +297,7 @@ CODE
       describe 'with forcing' do
         before do
           # Being explicit
-          Sprinkle::OPTIONS[:force] = true
+          @pkg.script.options[:force] = true
         end
 
         it 'should process verifications only once' do
@@ -306,14 +307,14 @@ CODE
 
         after do
           # Being explicit
-          Sprinkle::OPTIONS[:force] = false
+          @pkg.script.options[:force] = false
         end
       end
 
       describe 'without forcing' do
         before do
           # Being explicit
-          Sprinkle::OPTIONS[:force] = false
+          @pkg.script.options[:force] = false
         end
 
         it 'should process verifications twice' do

@@ -31,16 +31,20 @@ module Sprinkle
   #
   # <b>Only one deployment block is on any given sprinkle script</b>
   module Deployment
-    # The method outlined above which specifies deployment specific information
-    # for a sprinkle script. For more information, read the header of this module.
     def deployment(&block)
-      @deployment = Deployment.new(&block)
+      (Sprinkle::Script.instance ||= Sprinkle::Script.new).deployment(&block)
     end
 
+    # The method outlined above which specifies deployment specific information
+    # for a sprinkle script. For more information, read the header of this module
     class Deployment
-      attr_accessor :style, :defaults #:nodoc:
+      include Sprinkle::Configurable
 
-      def initialize(&block) #:nodoc:
+      attr_accessor :style, :defaults #:nodoc:
+      alias :script :parent
+
+      def initialize(script, &block) #:nodoc:
+        @parent = script
         @defaults = {}
         self.instance_eval(&block)
         raise 'No delivery mechanism defined' unless @style
@@ -54,7 +58,7 @@ module Sprinkle
       def delivery(type, &block) #:doc:
         type=type.to_s.titleize
         type="SSH" if type=="Ssh"
-        @style = ("Sprinkle::Actors::" + type).constantize.new &block
+        @style = ("Sprinkle::Actors::" + type).constantize.new self, &block
       end
 
       def method_missing(sym, *args, &block) #:nodoc:
@@ -66,7 +70,7 @@ module Sprinkle
       end
 
       def process #:nodoc:
-        POLICIES.each do |policy|
+        script.policies.each do |policy|
           policy.process(self)
         end
       rescue Sprinkle::Errors::RemoteCommandFailure => e
@@ -80,5 +84,6 @@ module Sprinkle
         @style.teardown if @style.respond_to?(:teardown)        
       end
     end
+
   end
 end

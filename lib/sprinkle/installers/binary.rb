@@ -13,7 +13,8 @@ module Sprinkle
     # This example will download archive.tar.gz to /home/user/sources and then
     # extract it into /home/user/local.
     class Binary < Installer
-      
+      attr_multioption :prefix, :archives
+
       api do
         def binary(source, options = {}, &block)
           install Sprinkle::Installers::Binary.new(self, source, options, &block)

@@ -36,6 +36,7 @@ module Sprinkle
       end
       
       attr_accessor :gem #:nodoc:
+      attr_option :source, :build_flags, :http_proxy, :repository, :version
 
       def initialize(parent, gem, options = {}, &block) #:nodoc:
         super parent, options, &block

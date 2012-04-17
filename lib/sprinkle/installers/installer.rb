@@ -52,11 +52,19 @@ module Sprinkle
     # the installation method's corresponding documentation page. 
     class Installer
       include Sprinkle::Configurable
-      attr_accessor :delivery, :package, :options, :pre, :post #:nodoc:
+      include Sprinkle::Deployable
+
+      attr_accessor :delivery, :pre, :post
+      attr_flag :testing, :use_sudo
+      
+      alias :package :parent
+      alias :package= :parent=
+      alias :sudo? :use_sudo? # backwards compatibility
 
       def initialize(package, options = {}, &block) #:nodoc:
-        @package = package
+        @parent = package
         @options = options || {}
+        @options[:use_sudo] = @options.delete(:sudo) if @options.has_key? :sudo # backwards compatibility
         @pre = {}; @post = {}
         self.instance_eval(&block) if block
       end
@@ -78,11 +86,7 @@ module Sprinkle
       def sudo_cmd
         "sudo " if sudo?
       end
-      
-      def sudo?
-        options[:sudo] or package.sudo?
-      end
-            
+                  
       def pre(stage, *commands)
         @pre[stage] ||= []
         @pre[stage] += commands
@@ -109,10 +113,10 @@ module Sprinkle
 
         if logger.debug?
           sequence = install_sequence; sequence = sequence.join('; ') if sequence.is_a? Array
-          logger.debug "#{@package.name} install sequence: #{sequence} for roles: #{roles}\n"
+          logger.debug "#{package.name} install sequence: #{sequence} for roles: #{roles}\n"
         end
 
-        unless Sprinkle::OPTIONS[:testing]
+        unless testing?
           logger.info "--> Installing #{package.name} for roles: #{roles}"
           @delivery.install(self, roles, :per_host => per_host?)
         end

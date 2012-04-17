@@ -3,9 +3,9 @@ require File.expand_path("../../spec_helper", File.dirname(__FILE__))
 describe Sprinkle::Actors::Local do
 
   before do
-    @local = Sprinkle::Actors::Local.new
+    @local = Sprinkle::Actors::Local.new nil
     
-    @package = Package.new("super") {}
+    @package = package("super") {}
   end
 
   describe 'when installing' do

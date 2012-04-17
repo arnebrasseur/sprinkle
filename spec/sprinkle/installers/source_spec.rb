@@ -35,7 +35,8 @@ describe Sprinkle::Installers::Source do
   end
 
   def create_source(source, version = nil, &block)
-    @package = mock(Sprinkle::Package, :name => 'package', :version => version)
+    @package = Sprinkle::Package::Package.new(nil, 'package') {}
+    @package.version version
 
     Sprinkle::Installers::Source.new(@package, source, &block)
   end

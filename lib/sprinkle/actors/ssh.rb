@@ -25,14 +25,15 @@ module Sprinkle
     #       gateway "work.sshgateway.com"
     #     end
     #   end
-    class SSH
+    class SSH < Actor
       attr_accessor :options #:nodoc:
       
       class SSHCommandFailure < StandardError #:nodoc:
         attr_accessor :details
       end 
       
-      def initialize(options = {}, &block) #:nodoc:
+      def initialize(deployment, options = {}, &block) #:nodoc:
+        super deployment
         @options = options.update(:user => 'root')
         @roles = {}
         self.instance_eval &block if block

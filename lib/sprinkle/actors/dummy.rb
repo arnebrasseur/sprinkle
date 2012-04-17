@@ -19,10 +19,12 @@ module Sprinkle
     # Recipes is given a list of files which capistrano will include and load.
     # These recipes are mainly to set variables such as :user, :password, and to 
     # set the app domain which will be sprinkled. 
-    class Dummy #:nodoc:
+    class Dummy < Actor #:nodoc:
       attr_accessor :config, :loaded_recipes #:nodoc:
 
-      def initialize(&block) #:nodoc:
+      def initialize(deployment, &block) #:nodoc:
+        super deployment
+
         # @config.set(:_sprinkle_actor, self)
         @roles={}
         self.instance_eval &block

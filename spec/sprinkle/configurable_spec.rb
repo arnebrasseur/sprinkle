@@ -4,44 +4,56 @@ describe Sprinkle::Configurable do
   module MyPrefix
     class Configurable
       include Sprinkle::Configurable
+      attr_option :baz
+      attr_multioption :multi
+      attr_flag :flag
     end
   end
   
   before do
     @configurable = MyPrefix::Configurable.new
-    @default = Proc.new { }
-    @defaults = { :configurable => @default }
-    @deployment = Object.new
-    @deployment.stub!(:defaults).and_return(@defaults)
-    @deployment.stub!(:style)
+    @value = Object.new
   end
 
-  it 'should be configurable via external defaults' do
-    @configurable.should respond_to(:defaults)
-  end
-
-  it 'should select the defaults for the particular concrete installer class' do
-    @deployment.should_receive(:defaults).and_return(@defaults)
-    @defaults.should_receive(:[]).with(:configurable).and_return(@default)
-  end
-
-  it 'should configure the installer delivery mechansim' do
-    @configurable.should_receive(:instance_eval)
-  end
-
-  it 'should maintain an options hash set arbitrarily via method missing' do
-    @configurable.instance_eval do
-      hsv 'gts'
+  describe 'attr_option' do
+    it 'should generate getters/setters' do
+      @configurable.baz = @value
+      @configurable.baz.should === @value
     end
-    @configurable.hsv.first.should == 'gts'
-  end
-  
-  it 'should allow the delivery instance variable to be accessed' do
-    @configurable.delivery = "string"
-    @configurable.instance_variable_get(:@delivery).should eql("string")
+
+    it 'should allow setting without equal sign' do
+      @configurable.baz = @value
+      @configurable.baz.should === @value
+    end
   end
 
-  after do
-    @configurable.defaults(@deployment)
+  describe 'attr_multioption' do
+    it 'should store its values in an array' do
+      @configurable.multi :xxx
+      @configurable.multi :yyy
+      @configurable.multi.should == [:xxx, :yyy]
+    end
+
+    it 'should allow setting without equal sign' do
+      @configurable.baz = @value
+      @configurable.baz.should === @value
+    end
+  end
+
+  describe 'attr_flag' do
+    it 'should generate flag type getters/setters' do
+      @configurable.flag = true
+      @configurable.flag?.should === true
+    end
+
+    it 'should allow setting without equal sign' do
+      @configurable.flag true
+      @configurable.flag?.should === true
+    end
+
+    it 'should allow setting to false' do
+      @configurable.flag false
+      @configurable.flag?.should === false
+    end
   end
 end

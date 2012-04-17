@@ -57,7 +57,7 @@ module Sprinkle
   # check if the package is already installed. If the verifications pass
   # before installing the package, it skips the package. To override this
   # behavior, set the -f flag on the sprinkle script or set the
-  # :force option to true in Sprinkle::OPTIONS
+  # :force option to true in Sprinkle::Script#options
   #
   # For more information on verifications and to see all the available
   # verifications, see Sprinkle::Verify
@@ -92,30 +92,29 @@ module Sprinkle
   # FIXME: Should probably document recommendations.
   #++
   module Package
-    PACKAGES = {}
 
-    def package(name, metadata = {}, &block)
-      package = Package.new(name, metadata, &block)
-      PACKAGES[name] = package
-
-      if package.provides
-        (PACKAGES[package.provides] ||= []) << package
-      end
-
-      package
+    def package(*args, &block)
+      (Sprinkle::Script.instance ||= Sprinkle::Script.new).package(*args, &block)
     end
 
-    class Package #:nodoc:
+    class Package
+      include Sprinkle::Configurable
+
       # include ArbitraryOptions
       attr_accessor :name, :provides, :installers, :verifications
       attr_accessor :args, :opts
+      attr_flag :testing, :verbose, :force, :use_sudo
+      attr_option :description, :version
 
-      def initialize(name, metadata = {}, &block)
+      alias :script :parent
+
+      def initialize(script, name, options = {}, &block)
         raise 'No package name supplied' unless name
 
+        @parent = script
         @name = name
-        @metadata = metadata
-        @provides = metadata[:provides]
+        @options = options
+        @provides = options[:provides]
         @dependencies = []
         @recommends = []
         @optional = []
@@ -126,29 +125,13 @@ module Sprinkle
         self.instance_eval &block
       end
       
-      def description(s=nil)
-        s ? @description = s : @description
-      end
-      
-      def version(s=nil)
-        s ? @version = s : @version
-      end
-      
       def instance(*args)
-        p=Package.new(name, @metadata) {}
+        p=Package.new(script, name, @options) {}
         p.opts = args.extract_options!
         p.args = args
         p.instance_variable_set("@block", @block)
         p.instance_eval &@block
         p
-      end
-      
-      def sudo?
-        @use_sudo
-      end
-      
-      def use_sudo(flag=true)
-        @use_sudo = flag
       end
             
       def args
@@ -194,7 +177,7 @@ module Sprinkle
         
         # Run a pre-test to see if the software is already installed. If so,
         # we can skip it, unless we have the force option turned on!
-        unless @verifications.empty? || Sprinkle::OPTIONS[:force]
+        unless @verifications.empty? || force?
           begin
             process_verifications(deployment, roles, true)
             
@@ -259,7 +242,7 @@ module Sprinkle
         packages = []
 
         @recommends.each do |dep, config|
-          package = PACKAGES[dep]
+          package = script.packages[dep]
           next unless package # skip missing recommended packages as they're allowed to not exist
           package=package.instance(config)
           block.call(self, package, depth) if block
@@ -267,7 +250,7 @@ module Sprinkle
         end
 
         @dependencies.each do |dep, config|
-          package = PACKAGES[dep]
+          package = script.packages[dep]
           package = select_package(dep, package) if package.is_a? Array
           
           raise "Package definition not found for key: #{dep}" unless package
@@ -279,7 +262,7 @@ module Sprinkle
         packages << self
 
         @optional.each do |dep, config|
-          package = PACKAGES[dep]
+          package = script.packages[dep]
           next unless package # skip missing optional packages as they're allow to not exist
           package = package.instance(config)
           block.call(self, package, depth) if block
@@ -307,7 +290,7 @@ module Sprinkle
               menu.prompt = "Multiple choices exist for virtual package #{name}"
               menu.choices *packages.collect(&:to_s)
             end
-            package = Sprinkle::Package::PACKAGES[package]
+            package = script.packages[package]
           end
 
           cloud_info "Selecting #{package.to_s} for virtual package #{name}"

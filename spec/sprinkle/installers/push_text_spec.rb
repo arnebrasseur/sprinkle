@@ -3,8 +3,8 @@ require File.expand_path("../../spec_helper", File.dirname(__FILE__))
 describe Sprinkle::Installers::PushText do
 
   before do
-    @package = mock(Sprinkle::Package, :name => 'package', :sudo? => false)
     @options = {:sudo => true}
+    @package = Sprinkle::Package::Package.new(nil, 'package', :sudo => false) {}
   end
 
   def create_text(text, path, options={}, &block)

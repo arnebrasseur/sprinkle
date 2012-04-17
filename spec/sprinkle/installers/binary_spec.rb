@@ -19,7 +19,7 @@ describe Sprinkle::Installers::Binary do
       archives '/archives/directory'
     end
 
-    installer.defaults(@deployment)
+    installer.defaults(deployment)
     
     [binary, deployment, installer]
   end

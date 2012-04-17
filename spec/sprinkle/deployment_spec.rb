@@ -64,8 +64,8 @@ describe Sprinkle::Deployment do
     
     before do 
       @policy = mock(Policy, :process => true)
-      POLICIES = [ @policy ]
       @deployment = create_deployment
+      Sprinkle::Script.instance.policies << @policy 
     end
     
     it 'should apply all policies, passing itself as the deployment context' do

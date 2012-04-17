@@ -5,7 +5,7 @@ describe Sprinkle::Installers::Transfer do
   include Sprinkle::Deployment
 
   before do
-    @package = mock(Sprinkle::Package, :name => 'package', :sudo? => false)
+    @package = Sprinkle::Package::Package.new(nil, 'package', :sudo => false) {}
     @empty = Proc.new { }
     @delivery = mock(Sprinkle::Deployment, :install => true)
 		@source = 'source'

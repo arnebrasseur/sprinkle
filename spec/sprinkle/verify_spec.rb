@@ -153,7 +153,7 @@ describe Sprinkle::Verify do
     describe 'when not testing' do
       before do
         # To be explicit
-        Sprinkle::OPTIONS[:testing] = false
+        @package.script.options[:testing] = false
       end
 
       it 'should call process on the delivery with the correct parameters' do
@@ -172,7 +172,7 @@ describe Sprinkle::Verify do
 
     describe 'when testing' do
       before do
-        Sprinkle::OPTIONS[:testing] = true
+        @package.script.options[:testing] = true
         @logger = mock(ActiveSupport::BufferedLogger, :debug => true, :debug? => true)
       end
 
@@ -186,7 +186,7 @@ describe Sprinkle::Verify do
 
       after do
         @verification.process([:app])
-        Sprinkle::OPTIONS[:testing] = false
+        Sprinkle::Script.instance = nil
       end
     end
   end

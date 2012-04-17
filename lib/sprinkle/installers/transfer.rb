@@ -147,7 +147,7 @@ module Sprinkle
 
       def render_template_file(path, context, prefix)
         template = File.read(path)
-        tempfile = render_template(template, context, @package.name)
+        tempfile = render_template(template, context, package.name)
         tempfile
       end
 
@@ -156,7 +156,7 @@ module Sprinkle
 
         logger.debug "transfer: #{@source} -> #{@destination} for roles: #{roles}\n"
 
-        return if Sprinkle::OPTIONS[:testing]
+        return if testing?
 
         if options[:render]
           if options[:locals]
@@ -173,7 +173,7 @@ module Sprinkle
             context = @binding
           end
 
-          tempfile = render_template_file(@source, context, @package.name)
+          tempfile = render_template_file(@source, context, package.name)
           @sourcepath = tempfile.path
           logger.info "Rendering template #{@source} to temporary file #{sourcepath}"
           recursive = false
